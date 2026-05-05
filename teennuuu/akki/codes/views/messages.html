@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeedConnect Messages</title>
+<link rel="stylesheet" href="/css/style4.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  body {
+    background: var(--bg-color, linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%));
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-primary);
+    overflow: hidden; /* App-like full height */
+  }
+
+  .chat-layout {
+    display: flex;
+    height: calc(100vh - 100px); /* Account for navbar */
+    max-width: 1200px;
+    margin: 80px auto 20px auto;
+    background: var(--card-bg, rgba(255, 255, 255, 0.85));
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  /* Left Pane */
+  .chat-sidebar {
+    width: 350px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: var(--side-bg, rgba(255,255,255,0.4));
+  }
+  .chat-sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 20px;
+    font-weight: 800;
+  }
+  .chat-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .chat-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .chat-item:hover, .chat-item.active {
+    background: var(--hover-color, rgba(142, 197, 252, 0.2));
+  }
+  .chat-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+  }
+  .chat-item-info h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+  .chat-item-info p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  /* Right Pane */
+  .chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg, transparent);
+  }
+  .chat-window-header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--nav-bg, rgba(255,255,255,0.7));
+  }
+  .chat-window-header img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    margin-right: 15px;
+  }
+  .chat-window-header h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .message-bubble {
+    max-width: 70%;
+    padding: 12px 18px;
+    border-radius: 20px;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .message-sent {
+    align-self: flex-end;
+    background: #3b82f6; /* Premium Blue */
+    color: white;
+    border-bottom-right-radius: 5px;
+  }
+  .message-received {
+    align-self: flex-start;
+    background: var(--input-bg, #f1f5f9);
+    color: var(--text-primary);
+    border-bottom-left-radius: 5px;
+  }
+  .chat-input-area {
+    padding: 10px 15px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-bg);
+  }
+  .cam-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #4c68d7; /* Insta Blue */
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .insta-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--input-bg, #262626);
+    border-radius: 30px;
+    padding: 6px 15px;
+    border: 1px solid var(--border-color);
+  }
+  .insta-input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    outline: none;
+    padding: 8px 0;
+  }
+  .insta-input-wrapper input::placeholder {
+    color: #8e8e8e;
+  }
+  .insta-input-icons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary, #f5f5f5);
+  }
+  .insta-input-icons svg {
+    cursor: pointer;
+  }
+  .send-text-btn {
+    color: #4c68d7;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+    font-size: 15px;
+  }
+
+  .unselected-state {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 768px) {
+    .chat-sidebar {
+      width: 100%;
+    }
+    .chat-window {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 10;
+    }
+    .mobile-back {
+      display: block !important;
+      margin-right: 15px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  }
+  .mobile-back { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Premium Glass Navbar Shared Across App -->
+<header class="navbar glass-nav">
+  <div class="nav-wrapper">
+    <div class="nav-left">
+      <div class="logo">Feed<span>Connect</span></div>
+    </div>
+    <div class="nav-btns" id="topNavBtns">
+      <a href="modules.html" class="login-link">Dashboard</a>
+      <button id="donormodThemeToggle" style="background:none; border:none; font-size:24px; cursor:pointer;" onclick="manualThemeToggle()">☀️</button>
+    </div>
+  </div>
+</header>
+
+<div class="chat-layout">
+  
+  <!-- Left Pane: Conversations List -->
+  <div class="chat-sidebar" id="chatSidebar">
+    <div class="chat-sidebar-header">
+      Messages
+    </div>
+    <div class="chat-list" id="convList">
+      <p style="padding:20px; text-align:center; color:var(--text-secondary);">Loading messages...</p>
+    </div>
+  </div>
+
+  <!-- Right Pane: Active Chat Window -->
+  <div class="chat-window" id="chatWindow">
+    <div class="unselected-state" id="unselectedState">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:15px; opacity:0.5;">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+      </svg>
+      <h2>Your Messages</h2>
+      <p>Select a conversation or start a new chat with a donor.</p>
+    </div>
+    
+    <div id="activeChatUI" style="display:none; flex:1; flex-direction:column;">
+      <div class="chat-window-header" style="justify-content: space-between;">
+        <div style="display:flex; align-items:center;">
+          <span class="mobile-back" onclick="closeMobileChat()">←</span>
+          <img id="activeChatAvatar" src="">
+          <h3 id="activeChatName">Loading...</h3>
+        </div>
+        <div>
+          <!-- Phone Icon matching screenshot -->
+          <a id="activeChatCall" href="#" style="color:inherit; text-decoration:none;">
+            <svg style="cursor:pointer;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          </a>
+        </div>
+      </div>
+      <div class="chat-messages" id="chatMessagesBox" style="background:#000;">
+        <!-- Messages populate here -->
+      </div>
+      <div class="chat-input-area" style="background:#111;">
+        <button class="cam-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        </button>
+        <div class="insta-input-wrapper">
+          <input type="text" id="chatInput" placeholder="Message..." onkeypress="handleEnter(event)" oninput="toggleSendBtn()">
+          <div class="insta-input-icons" id="chatIcons">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="10" r="1.5" fill="currentColor"></circle><circle cx="15.5" cy="10" r="1.5" fill="currentColor"></circle><path d="M9 15c1.5 2 4.5 2 6 0"></path></svg>
+          </div>
+          <div class="send-text-btn" id="sendBtnText" onclick="sendMessage() ">Send</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentUserPhone = null;
+let currentSessionUser = null;
+let activeTargetPhone = null;
+let activeTargetName = null;
+
+// Theming script integration (manual to ensure upside header compatibility)
+function manualThemeToggle() {
+  let html = document.documentElement;
+  let btn = document.getElementById("donormodThemeToggle");
+  if (html.getAttribute('data-theme') === 'dark') {
+    html.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'light');
+    btn.innerText = '🌙';
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+    btn.innerText = '☀️';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  let btn = document.getElementById("donormodThemeToggle");
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    if(btn) btn.innerText = '☀️';
+  } else {
+    if(btn) btn.innerText = '🌙';
+  }
+
+  currentSessionUser = JSON.parse(sessionStorage.getItem("currentUser"));
+  if(!currentSessionUser) {
+    window.location.href = "login.html";
+    return;
+  }
+  currentUserPhone = currentSessionUser.phone;
+  loadConversations();
+});
+
+// Load the list of all users we chatted with
+async function loadConversations() {
+  try {
+    const res = await fetch(`/api/chat/conversations/${currentUserPhone}`);
+    const chats = await res.json();
+    const list = document.getElementById("convList");
+    
+    if(!Array.isArray(chats)) {
+      console.error("Chats is not an array:", chats);
+      list.innerHTML = `<p style="padding:20px; text-align:center; color:var(--text-secondary);">Error loading conversations.</p>`;
+      return;
+    }
+
+    if(chats.length === 0) {
+      list.innerHTML = `<p style="padding:20px; text-align:center; color:var(--text-secondary);">No active conversations found.</p>`;
+    } else {
+      list.innerHTML = "";
+    }
+    
+    // For each chat, find the OTHER participant and load their profile
+    for(let c of chats) {
+      let targetPhoneArr = c.participants.filter(p => p !== currentUserPhone);
+      let tPhone = targetPhoneArr[0]; // Assuming 1-to-1 max
+      
+      if(!tPhone) continue; // Safety
+
+      // Get latest message for preview
+      let latestMsg = "No messages yet";
+      if(c.messages && c.messages.length > 0) {
+        latestMsg = c.messages[c.messages.length - 1].text;
+      }
+
+      // Fetch profile to get name/avatar
+      let uRes = await fetch(`/api/profile/${tPhone}`);
+      let targetData = {};
+      if(uRes.ok) {
+        targetData = await uRes.json();
+      }
+
+      let avatarUrl = targetData.photo || `https://ui-avatars.com/api/?name=${targetData.name || tPhone}&background=random&color=fff`;
+      let name = targetData.name || tPhone;
+
+      let div = document.createElement("div");
+      div.className = "chat-item";
+      div.onclick = () => openChat(tPhone, name, avatarUrl, div);
+      div.innerHTML = `
+        <img src="${avatarUrl}">
+        <div class="chat-item-info">
+          <h4>${name}</h4>
+          <p>${latestMsg}</p>
+        </div>
+      `;
+      list.appendChild(div);
+    }
+    
+    if(list.innerHTML === "") {
+        list.innerHTML = `<p style="padding:20px; text-align:center; color:var(--text-secondary);">No active conversations found.</p>`;
+    }
+
+    // Process deep-link from Profile Page
+    const urlParams = new URLSearchParams(window.location.search);
+    const intentPhone = urlParams.get("phone");
+    if(intentPhone) {
+      setTimeout(async () => {
+        let uRes = await fetch(`/api/profile/${intentPhone}`);
+        let targetData = uRes.ok ? await uRes.json() : {};
+        let name = targetData.name || intentPhone;
+        let avatarUrl = targetData.photo || `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`;
+        openChat(intentPhone, name, avatarUrl, null);
+        
+        // Strip to avoid loops if refreshed
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }, 300);
+    }
+
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function openChat(tPhone, name, avatarUrl, clickedDiv) {
+  // UI toggles
+  document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+  if(clickedDiv) clickedDiv.classList.add('active');
+
+  document.getElementById("unselectedState").style.display = "none";
+  let activeUI = document.getElementById("activeChatUI");
+  activeUI.style.display = "flex";
+
+  // Mobile layout switch
+  if(window.innerWidth <= 768) {
+    document.getElementById("chatSidebar").style.display = "none";
+    document.getElementById("chatWindow").style.display = "flex";
+  }
+
+  activeTargetPhone = tPhone;
+  activeTargetName = name;
+  document.getElementById("activeChatName").innerText = name;
+  document.getElementById("activeChatAvatar").src = avatarUrl;
+  document.getElementById("activeChatCall").href = `tel:${tPhone}`;
+  
+  fetchChatThread();
+  
+  // Auto-focus the keyboard for faster messaging
+  setTimeout(() => {
+    document.getElementById("chatInput").focus();
+  }, 500);
+  
+  // Set interval to poll this specific chat every 3 seconds for real-time feel
+  if(window.chatInterval) clearInterval(window.chatInterval);
+  window.chatInterval = setInterval(fetchChatThread, 3000);
+}
+
+function closeMobileChat() {
+  document.getElementById("chatSidebar").style.display = "flex";
+  document.getElementById("chatWindow").style.display = "none";
+  if(window.chatInterval) clearInterval(window.chatInterval);
+}
+
+async function fetchChatThread() {
+  if(!activeTargetPhone) return;
+  try {
+    const res = await fetch(`/api/chat/${currentUserPhone}/${activeTargetPhone}`);
+    const chat = await res.json();
+    const box = document.getElementById("chatMessagesBox");
+    
+    if(!chat.messages || chat.messages.length === 0) {
+      box.innerHTML = `<div style="text-align:center; color:var(--text-secondary); width:100%; margin-top:20px;">Say hi to ${activeTargetName}!</div>`;
+      return;
+    }
+
+    let isAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 50;
+
+    box.innerHTML = chat.messages.map(m => {
+      let isMe = m.senderPhone === currentUserPhone;
+      return `
+        <div class="message-bubble ${isMe ? 'message-sent' : 'message-received'}">
+          ${m.text}
+        </div>
+      `;
+    }).join("");
+
+    // Only auto-scroll if the user was already near the bottom, so we don't interrupt reading
+    if(isAtBottom) {
+      box.scrollTop = box.scrollHeight;
+    }
+  } catch(e){}
+}
+
+function toggleSendBtn() {
+  const input = document.getElementById("chatInput");
+  const icons = document.getElementById("chatIcons");
+  const sendBtn = document.getElementById("sendBtnText");
+  if(input.value.trim().length > 0) {
+    icons.style.display = "none";
+    sendBtn.style.display = "block";
+  } else {
+    icons.style.display = "flex";
+    sendBtn.style.display = "none";
+  }
+}
+
+function handleEnter(e) {
+  if(e.key === "Enter") sendMessage();
+}
+
+async function sendMessage() {
+  if(!activeTargetPhone) return;
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if(!text) return;
+  
+  input.value = ""; // pre-clear
+  toggleSendBtn(); // reset icons
+  
+  // Optimistically render
+  const box = document.getElementById("chatMessagesBox");
+  box.innerHTML += `
+    <div class="message-bubble message-sent" style="opacity:0.7">
+      ${text}
+    </div>
+  `;
+  box.scrollTop = box.scrollHeight;
+
+  try {
+    let uName = currentSessionUser.name || "User";
+    await fetch(`/api/chat/${currentUserPhone}/${activeTargetPhone}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ senderPhone: currentUserPhone, senderName: uName, text })
+    });
+    fetchChatThread();
+    // We also should refresh the conversation list so the preview updates!
+    // But we don't await so UI doesn't stutter
+    setTimeout(loadConversations, 500);
+  } catch(e){}
+}
+
+</script>
+<script src="/js/theme.js"></script>
+</body>
+</html>

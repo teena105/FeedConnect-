@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Public Profile | FeedConnect</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: #6366f1;
+  --primary-glow: rgba(99, 102, 241, 0.4);
+  --secondary: #10b981;
+  --accent: #f43f5e;
+  --bg-dark: #0f172a;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border: rgba(0, 0, 0, 0.05);
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] {
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: rgba(255, 255, 255, 0.08);
+  --bg-dark: #020617;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  background: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* HEADER NAVBAR */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  margin-bottom: 25px;
+  position: sticky;
+  top: 10px;
+  z-index: 1000;
+}
+
+.header button {
+  background: none;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+/* PROFILE HERO */
+.profile-hero {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border-radius: 32px;
+  border: 1px solid var(--glass-border);
+  padding: 40px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.avatar-wrapper {
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 20px;
+  padding: 4px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 50%;
+  box-shadow: 0 10px 30px var(--primary-glow);
+}
+
+.avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  object-fit: cover;
+}
+
+.profile-info h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.profile-info .role-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--primary-glow);
+  color: var(--primary);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.location-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-num {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.action-group {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.btn-main {
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-follow {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 15px var(--primary-glow);
+}
+
+.btn-follow.active {
+  background: rgba(0,0,0,0.1);
+  color: var(--text-main);
+  box-shadow: none;
+}
+
+.btn-outline {
+  background: rgba(0,0,0,0.05);
+  color: var(--text-main);
+}
+
+/* POSTS GRID */
+.posts-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-left: 10px;
+}
+
+.posts-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.donation-card {
+  background: var(--glass);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  transition: transform 0.3s;
+  position: relative;
+}
+
+.donation-card:hover {
+  transform: translateY(-5px);
+}
+
+.donation-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 15px;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.card-status {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.expiry-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(5px);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+  .photo-grid { grid-template-columns: 1fr; }
+  .stats-grid { gap: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <header class="header">
+    <button onclick="history.back()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m0 0l7 7m-7-7l7-7"></path></svg></button>
+    <div id="topUsername" style="font-weight:700;">Profile</div>
+    <button onclick="window.location.href='FOOOD.html'"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></button>
+  </header>
+
+  <section class="profile-hero">
+    <div class="avatar-wrapper">
+      <img id="profileAvatar" src="" alt="Avatar">
+    </div>
+    <div class="profile-info">
+      <h1 id="profileName">Loading...</h1>
+      <span class="role-tag" id="profileRole">Donor</span>
+      <div class="location-info">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <span id="profileCity">Loading city...</span>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-num" id="statsPosts">0</span>
+          <span class="stat-label">Donations</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="statsFollowers">0</span>
+          <span class="stat-label">Followers</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="statsFollowing">0</span>
+          <span class="stat-label">Following</span>
+        </div>
+      </div>
+
+      <div class="action-group" id="actionBtnGroup" style="display:none;">
+        <button id="btnFollow" class="btn-main btn-follow" onclick="toggleFollow()">Follow</button>
+        <button onclick="openChat()" class="btn-main btn-outline">Message</button>
+        <a id="btnCall" href="#" class="btn-main btn-outline" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Call</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="posts-header">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+    <h2>Donation Posts</h2>
+  </div>
+
+  <div class="photo-grid" id="photoGrid">
+    <div class="empty-state">Loading posts...</div>
+  </div>
+
+</div>
+
+<script src="/js/theme.js"></script>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetPhone = urlParams.get("phone");
+  let currentUser = JSON.parse(sessionStorage.getItem("currentUser"));
+  
+  if(!targetPhone) {
+    document.getElementById("profileName").innerText = "User Not Found";
+  } else {
+    loadProfileData();
+  }
+
+  async function loadProfileData() {
+    try {
+      const profileRes = await fetch(`/api/profile/${targetPhone}`);
+      const user = await profileRes.json();
+      
+      const uName = user.name || "Donor";
+      document.getElementById("topUsername").innerText = "@" + uName.toLowerCase().replace(/\s+/g, '');
+      document.getElementById("profileName").innerText = uName;
+      document.getElementById("profileRole").innerText = user.role || "Member";
+      document.getElementById("profileCity").innerText = user.address ? user.address.split(',').pop().trim() : "Private Location";
+      
+      document.getElementById("profileAvatar").src = user.photo || `https://ui-avatars.com/api/?name=${uName}&background=random&color=fff&size=200`;
+      document.getElementById("statsFollowers").innerText = user.followers ? user.followers.length : 0;
+      document.getElementById("statsFollowing").innerText = user.following ? user.following.length : 0;
+
+      if (currentUser && currentUser.phone !== targetPhone) {
+        document.getElementById("actionBtnGroup").style.display = "flex";
+        let btnF = document.getElementById("btnFollow");
+        let iFollow = user.followers && user.followers.includes(currentUser.phone);
+        btnF.innerText = iFollow ? "Following" : "Follow";
+        if(iFollow) btnF.classList.add('active');
+        
+        document.getElementById("btnCall").href = `tel:${user.phone}`;
+      }
+
+      const donRes = await fetch(`/api/user/donations/${targetPhone}`);
+      const donations = await donRes.json();
+      document.getElementById("statsPosts").innerText = donations.length;
+      
+      const grid = document.getElementById("photoGrid");
+      grid.innerHTML = "";
+      
+      if(donations.length === 0) {
+        grid.innerHTML = "<div class='empty-state'>No activity yet.</div>";
+      } else {
+        donations.reverse().forEach(d => {
+          const isExpired = new Date() > new Date(d.expiryTime);
+          const card = document.createElement("div");
+          card.className = "donation-card";
+          card.innerHTML = `
+            <img src="${d.photo || 'https://images.unsplash.com/photo-1498837167922-41c144345110?w=600'}">
+            <div id="countdown-${d._id}" class="expiry-overlay" style="${isExpired ? 'display:none' : ''}"></div>
+            <div class="card-content">
+              <div class="card-title">${d.food}</div>
+              <div class="card-status">${isExpired ? 'Expired' : d.status}</div>
+            </div>
+          `;
+          grid.appendChild(card);
+          if(!isExpired) startCountdown(d._id, d.expiryTime);
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function startCountdown(id, expiryDate) {
+    const el = document.getElementById(`countdown-${id}`);
+    if (!el) return;
+    function update() {
+      const dist = new Date(expiryDate).getTime() - new Date().getTime();
+      if (dist < 0) { el.style.display = "none"; return; }
+      const h = Math.floor(dist / 3600000);
+      const m = Math.floor((dist % 3600000) / 60000);
+      const s = Math.floor((dist % 60000) / 1000);
+      el.innerText = `${h}h ${m}m ${s}s`;
+    }
+    update();
+    setInterval(update, 1000);
+  }
+
+  async function toggleFollow() {
+    if(!currentUser) return;
+    await fetch(`/api/profile/${targetPhone}/follow`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentUserPhone: currentUser.phone })
+    });
+    loadProfileData();
+  }
+
+  function openChat() {
+    window.location.href = `messages.html?phone=${targetPhone}`;
+  }
+</script>
+</body>
+</html>

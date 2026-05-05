@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Feed Connect - Donor Application</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- Google Maps API (Replace with your key) -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places" onerror="loadLeafletFallback()"></script>
+
+<!-- Leaflet Fallback (Free) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" id="leafletCSS" disabled />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" id="leafletJS" disabled></script>
+
+<script>
+let useGoogle = true;
+
+// This is the official callback for Google Maps authentication failure (e.g. invalid key)
+window.gm_authFailure = function() {
+    console.error("Google Maps Authentication Failure. Switching to fallback.");
+    loadLeafletFallback();
+};
+
+function loadLeafletFallback() {
+    if (!useGoogle) return; // Already falling back
+    console.warn("Falling back to OpenStreetMap.");
+    useGoogle = false;
+    document.getElementById("leafletCSS").disabled = false;
+    document.getElementById("leafletJS").disabled = false;
+    
+    // Check if script is already loaded (manually adding it if necessary)
+    if (!window.L) {
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        script.onload = initFallbackMap;
+        document.head.appendChild(script);
+    } else {
+        initFallbackMap();
+    }
+}
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-color: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --input-bg: #f8fafc;
+    --border-color: #cbd5e1;
+    --btn-back: #e2e8f0;
+    --btn-back-hover: #cbd5e1;
+    --header-bg: transparent;
+  }
+  [data-theme="dark"] {
+    --bg-color: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.95);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --input-bg: #1e293b;
+    --border-color: #334155;
+    --btn-back: #334155;
+    --btn-back-hover: #475569;
+    --header-bg: #1e293b;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.3s, color 0.3s;
+  }
+  
+  .top-header {
+    width: 100%;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--header-bg);
+  }
+  .top-header h2 { font-size: 20px; color: var(--text-primary); }
+
+  .main-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .donor-container {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 800px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    padding: 50px;
+    transition: background 0.3s;
+  }
+  h1 {
+    font-size: 32px;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  p.subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .form-group.full-width {
+    grid-column: span 2;
+  }
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  input, select, textarea {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    font-family: inherit;
+    font-size: 15px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    background: var(--card-bg);
+  }
+  .action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    grid-column: span 2;
+  }
+  .btn-back {
+    padding: 14px 24px;
+    background: var(--btn-back);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-back:hover {
+    background: var(--btn-back-hover);
+  }
+  .btn-submit {
+    padding: 14px 40px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(16, 185, 129, 0.4);
+  }
+  .get-loc-btn:hover { background: #bae6fd; }
+  
+  #map {
+    height: 300px;
+    width: 100%;
+    margin-top: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .img-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+  }
+  .preview-item {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="top-header">
+  <h2>FeedConnect</h2>
+  <button id="donormodThemeToggle" style="background:none; border:none; font-size:24px; cursor:pointer;" onclick="manualThemeToggle()">☀️</button>
+</div>
+
+<div class="main-wrapper">
+<div class="donor-container">
+  <h1>Food Donation Flow</h1>
+  <p class="subtitle">Complete the details below to verify the safety and pickup schedule for your donation.</p>
+
+<form id="donationForm" class="form-grid">
+
+  <div class="form-group">
+    <label>Donor Name</label>
+    <input type="text" id="name" placeholder="John Doe" required>
+  </div>
+
+  <div class="form-group">
+    <label>Contact Number</label>
+    <input type="tel" id="phone" placeholder="+1..." required>
+  </div>
+
+  <div class="form-group full-width">
+    <label>Food Type</label>
+    <select id="foodtype" required>
+      <option value="">Select Food Category</option>
+      <option>Vegetarian</option>
+      <option>Non-Vegetarian</option>
+      <option>Mixed / Both</option>
+    </select>
+  </div>
+
+  <div class="form-group full-width">
+    <label>Food Name</label>
+    <input type="text" id="foodName" placeholder="E.g., 50 boxes of rice and curry" required>
+  </div>
+
+
+  <div class="form-group">
+    <label>Food Quantity</label>
+    <input type="text" id="quantity" placeholder="E.g., Meals for 50 people" required>
+  </div>
+
+  <div class="form-group">
+    <label>Food Photo Validation (Min 1, Max 4)</label>
+    <input type="file" id="foodphotos" accept="image/*" multiple required style="padding: 11px;">
+    <div id="imgPreview" class="img-preview-grid"></div>
+  </div>
+
+
+  <div class="form-group full-width">
+    <label>Additional Information (Optional)</label>
+    <textarea id="additionalInfo" rows="2" placeholder="Any other details for the receiver..."></textarea>
+  </div>
+
+  <div class="form-group full-width">
+    <label>Strict Pickup Address</label>
+    <input type="text" id="address" placeholder="Enter complete address..." required>
+  </div>
+
+  <div class="form-group">
+    <label>Pickup Date & Time</label>
+    <input type="datetime-local" id="pickupDate" required>
+  </div>
+
+  <div class="form-group">
+    <label>Absolute Expiry Time</label>
+    <input type="datetime-local" id="expiry" required>
+  </div>
+
+    <div style="position:relative;">
+      <div id="map"></div>
+      <button type="button" class="get-loc-btn" onclick="getLocation()" 
+              style="position:absolute; top:10px; right:10px; background:white; color:#10b981; border:2px solid #10b981; padding:8px 15px; border-radius:30px; font-weight:700; font-size:12px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1000; display:flex; align-items:center; gap:5px;">
+        📍 Auto-Fetch My Current Location
+      </button>
+    </div>
+
+  <div class="action-buttons">
+    <button type="button" class="btn-back" onclick="window.location.href='modules.html'">⬅ Back to Dashboard</button>
+    <button type="submit" class="btn-submit">Submit Donation Request</button>
+  </div>
+
+</form>
+
+</div>
+
+<script>
+
+let map, marker, autocomplete;
+let latitude = 17.3850, longitude = 78.4867; // Defaults
+
+window.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    prefillUserData();
+});
+
+async function prefillUserData() {
+    const sessionUser = JSON.parse(sessionStorage.getItem("currentUser"));
+    if (!sessionUser) return;
+    
+    try {
+        const res = await fetch(`/api/profile/${sessionUser.phone}`);
+        if (res.ok) {
+            const user = await res.json();
+            document.getElementById("name").value = user.name || "";
+            document.getElementById("phone").value = user.phone || "";
+            if (user.address && !document.getElementById("address").value) {
+                document.getElementById("address").value = user.address;
+                // Optionally move map to that address
+                if (useGoogle && typeof google !== 'undefined') {
+                    const geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({ address: user.address }, (results, status) => {
+                        if (status === "OK" && results[0]) {
+                            const loc = results[0].geometry.location;
+                            map.setCenter(loc);
+                            marker.setPosition(loc);
+                            latitude = loc.lat();
+                            longitude = loc.lng();
+                        }
+                    });
+                }
+            }
+        }
+    } catch (e) { console.error("Error prefilling data", e); }
+}
+
+function initMap() {
+    if (useGoogle && typeof google !== 'undefined') {
+        initGoogleMap();
+    } else {
+        initFallbackMap();
+    }
+    getLocation();
+}
+
+function initGoogleMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: latitude, lng: longitude },
+        zoom: 13
+    });
+    marker = new google.maps.Marker({
+        position: { lat: latitude, lng: longitude },
+        map: map,
+        draggable: true
+    });
+    marker.addListener('dragend', (e) => {
+        latitude = e.latLng.lat();
+        longitude = e.latLng.lng();
+        reverseGeocode(latitude, longitude);
+    });
+    autocomplete = new google.maps.places.Autocomplete(document.getElementById('address'));
+    autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) return;
+        map.setCenter(place.geometry.location);
+        marker.setPosition(place.geometry.location);
+        latitude = place.geometry.location.lat();
+        longitude = place.geometry.location.lng();
+    });
+}
+
+function initFallbackMap() {
+    if (typeof L === 'undefined') return;
+    map = L.map('map').setView([latitude, longitude], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    marker = L.marker([latitude, longitude], { draggable: true }).addTo(map);
+    marker.on('dragend', (e) => {
+        const pos = marker.getLatLng();
+        latitude = pos.lat;
+        longitude = pos.lng;
+        reverseGeocode(latitude, longitude);
+    });
+}
+
+function onPlaceChanged() { /* Handle via initGoogleMap */ }
+
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+        console.log("Tracked:", latitude, longitude);
+        if (useGoogle && map && typeof google !== 'undefined') {
+            map.setCenter({ lat: latitude, lng: longitude });
+            marker.setPosition({ lat: latitude, lng: longitude });
+        } else if (map && map.setView) {
+            map.setView([latitude, longitude], 16);
+            marker.setLatLng([latitude, longitude]);
+        }
+        reverseGeocode(latitude, longitude);
+      },
+      function(error) { 
+          console.error("Location error:", error.message);
+          alert("Could not track location: " + error.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  } else {
+    alert("Geolocation is not supported by your browser.");
+  }
+}
+
+function reverseGeocode(lat, lng) {
+    const addressInput = document.getElementById("address");
+    if (!addressInput) return;
+    
+    if (useGoogle && typeof google !== 'undefined') {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                addressInput.value = results[0].formatted_address;
+            }
+        });
+    } else {
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+          .then(res => res.json())
+          .then(data => { 
+              addressInput.value = data.display_name || `Lat: ${lat}, Lng: ${lng}`;
+          })
+          .catch(err => console.error("OSM Geocode error:", err));
+    }
+}
+
+// Handle Multiple Image Previews
+document.getElementById("foodphotos").addEventListener("change", function(e) {
+    const preview = document.getElementById("imgPreview");
+    preview.innerHTML = "";
+    
+    if (e.target.files.length > 4) {
+        alert("You can only upload a maximum of 4 photos.");
+        e.target.value = "";
+        return;
+    }
+
+    const files = Array.from(e.target.files);
+    
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(ex) {
+            const img = document.createElement("img");
+            img.src = ex.target.result;
+            img.className = "preview-item";
+            preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+
+document.getElementById("donationForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  
+  const filesInput = document.getElementById("foodphotos");
+  const filesCount = filesInput.files.length;
+
+  if (filesCount === 0) {
+      alert("Please upload at least 1 photo of the food.");
+      return;
+  }
+  if (filesCount > 4) {
+      alert("Please upload a maximum of 4 photos.");
+      return;
+  }
+
+  const files = Array.from(filesInput.files);
+
+  // Convert all files to Base64
+  const photoPromises = files.map(file => {
+      return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ex) => resolve(ex.target.result);
+          reader.readAsDataURL(file);
+      });
+  });
+
+  const photoResults = await Promise.all(photoPromises);
+  const currentUser = JSON.parse(sessionStorage.getItem("currentUser"));
+
+  const request = {
+    name: document.getElementById("name").value,
+    food: document.getElementById("foodtype").value,
+    foodName: document.getElementById("foodName").value,
+    quantity: document.getElementById("quantity").value,
+    address: document.getElementById("address").value,
+    pickupDate: document.getElementById("pickupDate").value,
+    expiryTime: document.getElementById("expiry").value,
+    phone: document.getElementById("phone").value,
+    photo: photoResults[0], // First image for thumbnails
+    photos: photoResults,   // All images
+    additionalInfo: document.getElementById("additionalInfo").value,
+    lat: latitude.toString(),
+    lng: longitude.toString()
+  };
+
+  fetch('/donate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  })
+  .then(response => response.json().then(data => ({ status: response.status, body: data })))
+  .then(result => {
+    if (result.status === 200) {
+      window.location.href = "donatesucc.html";
+    } else {
+      alert(result.body.message || "Failed to submit donation");
+    }
+  })
+  .catch(err => {
+    console.error("Error:", err);
+    alert("An error occurred. Please try again later.");
+  });
+});
+
+</script>
+<script src="/js/theme.js"></script>
+<script>
+  function manualThemeToggle() {
+    let html = document.documentElement;
+    let btn = document.getElementById("donormodThemeToggle");
+    if (html.getAttribute('data-theme') === 'dark') {
+      html.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'light');
+      btn.innerText = '🌙';
+    } else {
+      html.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+      btn.innerText = '☀️';
+    }
+    // Also trigger theme.js sync if exists
+    let mainBtn = document.getElementById("mobileThemeToggle");
+    if(mainBtn) {
+      mainBtn.innerText = html.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    }
+  }
+
+  // initialize button state
+  window.addEventListener('DOMContentLoaded', () => {
+    let btn = document.getElementById("donormodThemeToggle");
+    let stored = localStorage.getItem('theme');
+    if (stored === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if(btn) btn.innerText = '☀️';
+    } else {
+      if(btn) btn.innerText = '🌙';
+    }
+    
+    // Hide default floating button from theme.js since we have top-header mapped
+    let floatBtn = document.getElementById("mobileThemeToggle");
+    if(floatBtn) floatBtn.style.display = "none";
+  });
+</script>
+</div>
+</body>
+</html>

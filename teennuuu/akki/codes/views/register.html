@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Feed Connect - Register</title>
+
+<style>
+:root {
+  --bg-color: #f8fafc;
+  --card-bg: white;
+  --text-primary: #333;
+  --input-bg: white;
+  --input-border: #ccc;
+  --box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-primary: #f8fafc;
+  --input-bg: #0f172a;
+  --input-border: #334155;
+  --box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+body{
+margin:0;
+height:100vh;
+background: var(--bg-color);
+background-image:
+url("/images/leftimage.jpg"),
+url("/images/rightimg.jpg");
+background-repeat:no-repeat,no-repeat;
+background-position:left center, right center;
+background-size:350px,450px;
+font-family:Arial, Helvetica, sans-serif;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+transition: background 0.3s ease;
+}
+
+.register-container{
+background: var(--card-bg);
+padding:30px;
+border-radius:10px;
+box-shadow: var(--box-shadow);
+width:350px;
+transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.title{
+text-align:center;
+margin-bottom:20px;
+color: var(--text-primary);
+}
+
+form{
+display:flex;
+flex-direction:column;
+}
+
+label{
+margin-top:10px;
+font-weight:600;
+color: var(--text-primary);
+}
+
+input{
+padding:10px;
+margin-top:5px;
+border-radius:5px;
+border:1px solid var(--input-border);
+background: var(--input-bg);
+color: var(--text-primary);
+}
+
+button{
+display:block;
+width:100%;
+margin-top:20px;
+padding:12px;
+border:none;
+background:#4CAF50;
+color:white;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#2e7d32;
+}
+
+.login-link {
+  margin-top: 15px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.login-link a {
+  color: #10b981;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="register-container">
+
+<h2 class="title">Register</h2>
+
+<form id="registerForm">
+
+<label>Name</label>
+<input type="text" id="username" required>
+
+<label>Email</label>
+<input type="email" id="email" required>
+
+<label>Mobile Number</label>
+<input type="tel" id="phone" pattern="\d{10}" maxlength="10" title="Please enter exactly 10 digits" required>
+
+<label>Password</label>
+<input type="password" id="password" required>
+
+<label>Confirm Password</label>
+<input type="password" id="confirmPassword" required>
+
+<button type="submit">Register</button>
+
+<button type="button" onclick="window.location.href='FOOOD.html'">⬅ Back</button>
+
+</form>
+
+<div class="login-link">
+Already have an account?
+<a href="login.html">Login</a>
+</div>
+
+</div>
+
+<script>
+
+// REDIRECT IF ALREADY LOGGED IN
+if(sessionStorage.getItem("currentUser")){
+  window.location.href = "modules.html";
+}
+
+document.getElementById("registerForm").addEventListener("submit", function(e){
+
+e.preventDefault();
+
+let username = document.getElementById("username").value;
+let email = document.getElementById("email").value;
+let phone = document.getElementById("phone").value;
+let password = document.getElementById("password").value;
+let confirmPassword = document.getElementById("confirmPassword").value;
+
+/* CHECK PASSWORD MATCH */
+
+if(password !== confirmPassword){
+alert("Passwords do not match!");
+return;
+}
+
+let user = {
+username: username,
+email: email,
+phone: phone,
+password: password
+};
+
+fetch('/api/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(user)
+})
+.then(response => response.json().then(data => ({ status: response.status, body: data })))
+.then(result => {
+  if (result.status === 201) {
+    // Save only phone to sessionStorage
+    sessionStorage.setItem("currentUser", JSON.stringify({ phone: result.body.user.phone }));
+    alert("Registration Successful");
+    window.location.href = "modules.html";
+  } else {
+    alert(result.body.message || "Registration failed");
+  }
+})
+.catch(err => {
+  console.error("Error:", err);
+  alert("An error occurred during registration");
+});
+
+});
+
+</script>
+<script src="/js/theme.js"></script>
+</body>
+</html>

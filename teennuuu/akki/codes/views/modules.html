@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Feed Connect Modules</title>
+<link rel="stylesheet" href="/css/modules.css">
+</head>
+
+<body>
+   <button class="back-btn" onclick="window.location.href='FOOOD.html'">⬅ Back Home</button>
+
+
+<h1 class="title">Feed Connect Services</h1>
+
+<div class="module-container">
+
+<div class="module-card donor-card">
+<img src="/images/donation modules.jpg" alt="Donor Module">
+<button onclick="window.location.href='donormod.html'">
+Donor Module
+</button>
+</div>
+
+<div class="module-card ngo-card">
+<img src="/images/volunteers.jpg" alt="NGO Receiver">
+<button onclick="window.location.href='ngo.html'">
+NGO Receiver
+</button>
+</div>
+
+<div class="module-card animal-card">
+<img src="/images/animals.jpg" alt="Animal Feeder">
+<button onclick="window.location.href='animalfeed.html'">
+Animal Feeder
+</button>
+</div>
+
+</div>
+<script>
+function goBack(){
+history.back();
+}
+
+// REDIRECT IF NOT LOGGED IN
+if(!sessionStorage.getItem("currentUser")){
+  window.location.href = "login.html";
+}
+</script>
+
+
+<script src="/js/theme.js"></script>
+
+</body>
+</html>

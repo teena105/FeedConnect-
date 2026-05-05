@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feed Connect - Animal Feeder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-color: #fdfbfb;
+    --text-primary: #333;
+    --text-secondary: #64748b;
+    --header-bg: rgba(255, 255, 255, 0.95);
+    --card-bg: white;
+    --border-color: #e2e8f0;
+    --input-bg: #f8fafc;
+    --modal-bg: white;
+    --modal-overlay: rgba(0,0,0,0.6);
+    --btn-bg: #10b981;
+    --btn-text: white;
+  }
+  [data-theme="dark"] {
+    --bg-color: #0f172a;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --header-bg: rgba(30, 41, 59, 0.95);
+    --card-bg: #1e293b;
+    --border-color: #334155;
+    --input-bg: #0f172a;
+    --modal-bg: #1e293b;
+    --modal-overlay: rgba(0,0,0,0.8);
+    --btn-bg: #059669;
+    --btn-text: white;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    padding-bottom: 50px;
+    transition: background 0.3s, color 0.3s;
+  }
+  
+  /* HEADER & SEARCH */
+  .header {
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    padding: 20px 40px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .header h1 {
+    font-size: 24px;
+    color: var(--text-primary);
+  }
+  .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+  }
+  .search-input {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 30px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    transition: all 0.3s;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: #10b981;
+    background: var(--card-bg);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+
+  /* IG-STYLE GRID */
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .post-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  .post-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+  }
+  
+  .post-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--card-bg);
+  }
+  .post-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid #f59e0b;
+    padding: 2px;
+    margin-right: 12px;
+  }
+  .post-user {
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--text-primary);
+  }
+
+  .post-image-container {
+    position: relative;
+    width: 100%;
+    padding-top: 100%;
+    background: #f1f5f9;
+  }
+  .post-image {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .multi-indicator {
+    position: absolute;
+    top: 15px; right: 15px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    backdrop-filter: blur(4px);
+  }
+
+  .post-footer {
+    padding: 16px;
+  }
+  .post-title {
+    font-weight: 800;
+    font-size: 17px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .post-status {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--modal-overlay);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal-content {
+    background: var(--modal-bg);
+    color: var(--text-primary);
+    width: 90%;
+    max-width: 900px;
+    border-radius: 16px;
+    display: flex;
+    overflow: hidden;
+    max-height: 85vh;
+    animation: modalPop 0.3s ease;
+  }
+  @keyframes modalPop {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal-image-side {
+    flex: 1.2;
+    background: #000;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .carousel-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    transition: transform 0.3s ease;
+  }
+  .carousel-item {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+  .carousel-item img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+  }
+  /* Removed manual carousel buttons */
+  .carousel-nav { display: none !important; }
+  .carousel-dots {
+    position: absolute;
+    bottom: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    transition: all 0.2s;
+  }
+  .dot.active {
+    background: white;
+    transform: scale(1.2);
+  }
+  .modal-info-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--modal-bg);
+    max-width: 450px;
+  }
+  .modal-header-info {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .close-modal {
+    cursor: pointer;
+    font-size: 30px;
+    color: var(--text-secondary);
+    line-height: 1;
+  }
+  .modal-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .modal-body p {
+    margin-bottom: 15px;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  .modal-body b {
+    color: var(--text-primary);
+  }
+  .modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+  }
+  .accept-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-green {
+    background: var(--btn-bg);
+    color: var(--btn-text);
+  }
+  .btn-green:hover { background: #059669; }
+  .btn-disabled {
+    background: var(--border-color);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+
+  .back-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  .tabs-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: 40px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .tab-btn {
+    padding: 10px 30px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  .tab-btn.active {
+    background: #f59e0b;
+    color: white;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+  }
+
+  .tab-btn:hover:not(.active) {
+    background: var(--border-color);
+  }
+
+  /* Responsive Modal */
+  @media (max-width: 768px) {
+
+    .modal-content {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .modal-image-side {
+      flex: none;
+      height: 300px;
+    }
+    .modal-info-side {
+      max-width: 100%;
+    }
+    .header {
+      flex-direction: column;
+      gap: 15px;
+      padding: 15px;
+    }
+    .grid-container {
+      padding: 20px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex; align-items:center; gap: 20px;">
+    <h1>Animal Rescue Feed</h1>
+  </div>
+  <div class="search-container">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search for food types..." onkeyup="filterDonations()">
+  </div>
+</div>
+
+<div class="tabs-container">
+  <button class="tab-btn active" id="tabActive" onclick="switchTab('active')">Active</button>
+  <button class="tab-btn" id="tabCompleted" onclick="switchTab('completed')">Completed</button>
+</div>
+
+<div class="grid-container" id="donationGrid">
+
+  <p style="text-align:center; grid-column: 1/-1; color: #64748b;">Checking for expired food reserves...</p>
+</div>
+
+<!-- INSTAGRAM STYLE MODAL -->
+<div class="modal-overlay" id="postModal" onclick="closeModal(event)">
+  <div class="modal-content">
+    
+    <div class="modal-image-side">
+      <button class="carousel-nav carousel-prev" onclick="moveCarousel(-1)">❮</button>
+      <div id="carouselTrack" class="carousel-container">
+        <!-- Images injected here -->
+      </div>
+      <button class="carousel-nav carousel-next" onclick="moveCarousel(1)">❯</button>
+      <div id="carouselDots" class="carousel-dots"></div>
+    </div>
+
+    <div class="modal-info-side" style="display:flex; flex-direction:column; max-height:85vh;">
+      
+      <!-- Top nav info -->
+      <div class="modal-header-info">
+        <div style="display:flex; align-items:center; cursor:pointer;" onclick="window.location.href='public-profile.html?phone=' + currentDonorPhone">
+          <img class="post-avatar" id="modalAvatar" src="">
+          <span class="post-user" id="modalDonorName" style="color:var(--text-primary);">Donor</span>
+        </div>
+        <span class="close-modal" onclick="document.getElementById('postModal').classList.remove('active')" style="color:var(--text-primary); cursor:pointer;">&times;</span>
+      </div>
+
+      <!-- Scrollable Body -->
+      <div class="modal-body" style="flex:1; overflow-y:auto; padding:20px;">
+        <h2 id="modalFoodTitle" style="margin-bottom:10px; color:var(--text-primary);">Food Title</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; font-size:14px; color:var(--text-secondary);">
+          <p><b>Status:</b> <span id="modalStatusBadge"></span></p>
+          <p><b>Quantity:</b> <span id="modalQty"></span></p>
+          <p><b>Food Category:</b> <span id="modalCategory"></span></p>
+          <p><b>Contact Info:</b> <span id="modalContactBody"></span></p>
+          <p style="grid-column:1/-1;"><b>Pickup Location:</b> <span id="modalAddress"></span></p>
+          <p><b>Scheduled:</b> <span id="modalScheduled"></span></p>
+          <p><b>Expires:</b> <span id="modalExpiry"></span></p>
+        </div>
+
+        <!-- Live Map embedding via iframe -->
+        <h3 style="font-size:15px; margin-bottom:5px; color:var(--text-primary);">Live Location</h3>
+        <div id="mapContainer" style="width:100%; height:150px; background:var(--border-color); border-radius:10px; margin-bottom:20px; overflow:hidden;">
+          <iframe id="liveMapIframe" width="100%" height="100%" frameborder="0" style="border:0;" allowfullscreen></iframe>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border-color); margin:15px 0;">
+        
+        <!-- Star Rating -->
+        <div style="margin-bottom:20px;">
+          <h3 style="font-size:15px; margin-bottom:5px; color:var(--text-primary);">Rate this Post</h3>
+          <p id="postAvgRating" style="font-size:13px; color:var(--text-secondary); margin-bottom:5px;"></p>
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+            <select id="ratingSelect" style="padding:6px; border-radius:6px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);">
+              <option value="5">⭐⭐⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐</option>
+              <option value="3">⭐⭐⭐</option>
+              <option value="2">⭐⭐</option>
+              <option value="1">⭐</option>
+            </select>
+            <input type="text" id="ratingFeedback" placeholder="Optional feedback..." style="flex:1; padding:6px; border-radius:6px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-primary);">
+            <button onclick="submitRating()" style="padding:6px 15px; background:#f59e0b; color:white; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">Rate</button>
+          </div>
+        </div>
+
+        <!-- Collapsible Comments -->
+        <div style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; background:var(--input-bg); padding:10px; border-radius:8px; margin-bottom:10px;" onclick="toggleComments()">
+          <h3 style="font-size:15px; margin:0; color:var(--text-primary);">🗨️ Comments (<span id="commentCount">0</span>)</h3>
+          <span id="commentToggleIcon" style="color:var(--text-secondary);">▼</span>
+        </div>
+        <div id="commentsWrapper" style="display:none;">
+          <div id="modalCommentsList" style="max-height:150px; overflow-y:auto; background:var(--input-bg); padding:10px; border-radius:8px; margin-bottom:10px; font-size:14px; border:1px solid var(--border-color);">
+            <!-- Comments go here -->
+          </div>
+          <div style="display:flex; gap:5px;">
+            <input type="text" id="commentInput" placeholder="Add a comment..." style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-primary);">
+            <button onclick="postComment()" style="padding:8px 15px; background:#3b82f6; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Post</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer" style="padding:15px; border-top:1px solid var(--border-color);">
+        <button id="modalAcceptBtn" class="accept-btn btn-green"></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<a href="modules.html" class="back-btn">← Back to Home</a>
+
+<script>
+let allDonations = [];
+
+async function loadAnimalFeed() {
+  try {
+    const res = await fetch("/api/donations");
+    const donations = await res.json();
+    
+    // Auto-filter logic: if it's expired AND not previously accepted by human NGOs
+    let now = new Date();
+    let expiredFood = donations.filter(food => {
+      const expiry = new Date(food.expiryTime).getTime();
+      const current = new Date().getTime();
+      const isExpired = expiry <= current;
+      
+      // Show ONLY if strictly expired AND not already taken by human NGOs
+      return isExpired && (food.status !== "Accepted");
+    });
+    
+    // Reverse array so latest expired appear top
+    expiredFood.reverse();
+    allDonations = expiredFood;
+    filterDonations();
+  } catch (e) {
+    document.getElementById("donationGrid").innerHTML = "<p style='text-align:center;color:red;'>Error connecting to server to find animal food.</p>";
+  }
+}
+
+let currentTab = 'active';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabActive').classList.toggle('active', tab === 'active');
+  document.getElementById('tabCompleted').classList.toggle('active', tab === 'completed');
+  filterDonations();
+}
+
+function filterDonations() {
+  let query = document.getElementById("searchInput").value.toLowerCase();
+  let filtered = allDonations.filter(d => {
+    // Search Match
+    const matchesSearch = d.food.toLowerCase().includes(query) || 
+                          d.name.toLowerCase().includes(query);
+    
+    // Tab Match
+    let matchesTab = false;
+    if (currentTab === 'active') {
+      matchesTab = d.status !== 'Accepted (Animal Feeder)';
+    } else {
+      matchesTab = d.status === 'Accepted (Animal Feeder)';
+    }
+    
+    return matchesSearch && matchesTab;
+  });
+  renderGrid(filtered);
+}
+
+
+function renderGrid(donations) {
+  let grid = document.getElementById("donationGrid");
+  grid.innerHTML = "";
+
+  if (donations.length === 0) {
+    grid.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'>No strictly expired food ready for animals found. 🐄</p>";
+    return;
+  }
+
+  donations.forEach(d => {
+    let isAccepted = d.status === "Accepted (Animal Feeder)";
+    let statusText = isAccepted ? "Accepted & Claimed" : "Ready for Animals";
+    let statusColor = isAccepted ? "#64748b" : "#d97706";
+    let statusBg = isAccepted ? "#e2e8f0" : "#fef3c7";
+    
+    // Provide a fallback UI Avatar
+    let avatarUrl = `https://ui-avatars.com/api/?name=${d.name}&background=random&color=fff`;
+
+    // Food fallback image just in case
+    let imgUrl = d.photo || "https://images.unsplash.com/photo-1548345680-f5475ea90f46?w=600&auto=format&fit=crop&q=60"; 
+
+    let card = document.createElement("div");
+    card.className = "post-card";
+
+    card.innerHTML = `
+      <div class="post-header">
+        <img class="post-avatar" src="${avatarUrl}">
+        <span class="post-user">${d.name}</span>
+      </div>
+      <div class="post-image-container">
+        <img class="post-image" src="${imgUrl}" onerror="this.src='/images/placeholder-food.jpg'">
+        ${d.photos && d.photos.length > 1 ? `<div class="multi-indicator">1/${d.photos.length}</div>` : ''}
+      </div>
+      <div class="post-footer" style="padding-top:10px; position:relative;">
+        <div id="countdown-${d._id}" style="position:absolute; top:-35px; right:15px; background:rgba(0,0,0,0.7); color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; backdrop-filter:blur(5px); ${isAccepted ? 'display:none;' : ''}"></div>
+        <div class="post-title">${d.food}</div>
+        <div style="font-size:12.5px; color:var(--text-secondary); margin-bottom:10px; display:flex; align-items:center; gap:5px;">
+          📍 ${d.address ? (d.address.length > 30 ? d.address.substring(0,30)+'...' : d.address) : 'Address not specified'}
+        </div>
+        <span class="post-status" style="color:${statusColor}; background:${statusBg}">${statusText}</span>
+      </div>
+    `;
+
+    if(!isAccepted) startCountdown(d._id, d.expiryTime);
+
+    // Click handler for Modal
+    card.onclick = () => openPostModal(d, statusText, statusColor, avatarUrl, imgUrl);
+    
+    grid.appendChild(card);
+  });
+}
+
+let currentUserPhone = "";
+let currentModalPostId = null;
+let currentDonorPhone = null;
+
+// Helper to pull current user out if exists
+window.addEventListener('DOMContentLoaded', () => {
+  let sessionUser = JSON.parse(sessionStorage.getItem("currentUser"));
+  if (sessionUser) currentUserPhone = sessionUser.phone;
+});
+
+let currentCarouselIndex = 0;
+let modalPhotos = [];
+
+function openPostModal(d, statusText, statusColor, avatarUrl, imgUrl) {
+  currentModalPostId = d._id;
+  currentDonorPhone = d.phone;
+
+  // Setup Carousel
+  modalPhotos = d.photos && d.photos.length > 0 ? d.photos : [imgUrl];
+  currentCarouselIndex = 0;
+  updateCarouselUI();
+  document.getElementById("modalAvatar").src = avatarUrl;
+  document.getElementById("modalDonorName").innerText = d.name;
+  
+  document.getElementById("modalFoodTitle").innerText = d.food;
+  
+  let badge = document.getElementById("modalStatusBadge");
+  badge.innerText = statusText;
+  badge.style.color = statusColor;
+
+  document.getElementById("modalQty").innerText = d.quantity;
+  document.getElementById("modalCategory").innerText = d.food || "General";
+  
+  // Make contact body a clickable link for better support
+  const contactBody = document.getElementById("modalContactBody");
+  contactBody.innerHTML = `<a href="tel:${d.phone}" style="color: #3b82f6; text-decoration: none; font-weight: 600;">📞 ${d.phone}</a>`;
+  
+  document.getElementById("modalAddress").innerText = d.address;
+  document.getElementById("modalScheduled").innerText = formatTime(d.pickupDate);
+  document.getElementById("modalExpiry").innerText = formatTime(d.expiryTime);
+
+
+  // Setup Map iframe + Redirect Link
+  const mapCont = document.getElementById("mapContainer");
+  if(d.lat && d.lng) {
+    const floatLat = parseFloat(d.lat);
+    const floatLng = parseFloat(d.lng);
+    if (!isNaN(floatLat) && !isNaN(floatLng)) {
+      mapCont.style.cursor = "pointer";
+      mapCont.title = "Click to open in Google Maps";
+      mapCont.onclick = () => window.open(`https://www.google.com/maps/search/?api=1&query=${floatLat},${floatLng}`, '_blank');
+      
+      mapCont.innerHTML = `
+        <div style="position:relative; width:100%; height:100%;">
+          <iframe id="liveMapIframe" width="100%" height="100%" frameborder="0" scrolling="no" src="https://www.openstreetmap.org/export/embed.html?bbox=${floatLng-0.005},${floatLat-0.005},${floatLng+0.005},${floatLat+0.005}&layer=mapnik&marker=${floatLat},${floatLng}"></iframe>
+          <div style="position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.9); padding:5px 10px; border-radius:5px; font-size:12px; font-weight:600; color:#1e293b; box-shadow:0 2px 5px rgba(0,0,0,0.1);">📍 Open in Google Maps</div>
+        </div>
+      `;
+      mapCont.style.display = "block";
+    } else {
+      mapCont.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:14px;">Invalid Location Coordinates</div>`;
+      mapCont.style.display = "block";
+    }
+  } else {
+    mapCont.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:14px;">GPS Location Not Provided</div>`;
+    mapCont.style.display = "block";
+  }
+
+  // Setup Rating Details
+  if(d.ratings && d.ratings.length > 0) {
+    let sum = d.ratings.reduce((acc, r) => acc + parseInt(r.rating || 0), 0);
+    let avg = (sum / d.ratings.length).toFixed(1);
+    document.getElementById("postAvgRating").innerText = `Average Rating: ${avg}⭐ (${d.ratings.length} reviews)`;
+  } else {
+    document.getElementById("postAvgRating").innerText = "No ratings yet.";
+  }
+
+  // Collapse Comments By Default
+  document.getElementById("commentsWrapper").style.display = "none";
+  document.getElementById("commentCount").innerText = d.comments ? d.comments.length : 0;
+  document.getElementById("commentToggleIcon").innerText = "▼";
+  renderModalComments(d.comments || []);
+
+  let btn = document.getElementById("modalAcceptBtn");
+  if (d.status === "Accepted (Animal Feeder)") {
+    btn.className = "accept-btn btn-disabled";
+    btn.disabled = true;
+    btn.innerText = "Already Accepted";
+    btn.onclick = null;
+  } else {
+    btn.className = "accept-btn btn-green";
+    btn.disabled = false;
+    btn.innerText = "Accept for Animals";
+    btn.onclick = () => acceptDonation(d._id);
+  }
+
+  document.getElementById("postModal").classList.add("active");
+}
+
+
+
+function toggleComments() {
+  const w = document.getElementById("commentsWrapper");
+  const ic = document.getElementById("commentToggleIcon");
+  if (w.style.display === "none") {
+    w.style.display = "block";
+    ic.innerText = "▲";
+  } else {
+    w.style.display = "none";
+    ic.innerText = "▼";
+  }
+}
+
+async function submitRating() {
+  if (!currentUserPhone) return alert("Login to rate.");
+  let r = document.getElementById("ratingSelect").value;
+  let f = document.getElementById("ratingFeedback").value;
+  try {
+    await fetch(`/api/donations/${currentModalPostId}/rate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userPhone: currentUserPhone, rating: parseInt(r), feedback: f })
+    });
+    alert("Rated successfully!");
+    document.getElementById("ratingFeedback").value = "";
+    loadAnimalFeed(); 
+  } catch(e){}
+}
+
+function renderModalComments(comments) {
+  const container = document.getElementById("modalCommentsList");
+  if (!comments || comments.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-secondary); font-size:13px;">No comments yet.</p>';
+    return;
+  }
+  container.innerHTML = comments.map(c => 
+    `<div style="margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">
+       <b style="font-size:13px; color:var(--text-primary);">${c.userName}</b> <span style="font-size:13px; color:var(--text-secondary);">${c.text}</span>
+     </div>`
+  ).join("");
+  container.scrollTop = container.scrollHeight;
+}
+
+async function postComment() {
+  if (!currentUserPhone) return alert("Please login first to comment.");
+  let text = document.getElementById("commentInput").value;
+  if (!text.trim() || !currentModalPostId) return;
+
+  let sessionUser = JSON.parse(sessionStorage.getItem("currentUser"));
+  let uName = sessionUser.username || sessionUser.name || "User";
+
+  try {
+    const res = await fetch(`/api/donations/${currentModalPostId}/comment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userPhone: currentUserPhone, userName: uName, text })
+    });
+    const data = await res.json();
+    document.getElementById("commentInput").value = "";
+    if (data.comments) {
+      let targetD = allDonations.find(d => d._id === currentModalPostId);
+      if (targetD) targetD.comments = data.comments;
+      renderModalComments(data.comments);
+      document.getElementById("commentCount").innerText = data.comments.length;
+    }
+  } catch (e) {
+    alert("Error posting comment");
+  }
+}
+
+function closeModal(e) {
+  if (e.target.id === "postModal") {
+    document.getElementById("postModal").classList.remove("active");
+  }
+}
+
+async function acceptDonation(id) {
+  if (!currentUserPhone) return alert("Please login first to accept food.");
+  let sessionUser = JSON.parse(sessionStorage.getItem("currentUser"));
+  try {
+    const res = await fetch(`/api/donations/${id}/accept`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acceptedBy: sessionUser.name || "Animal Feeder", status: "Accepted (Animal Feeder)" })
+    });
+    if (res.ok) {
+      alert("Food Accepted for Animals!");
+      document.getElementById("postModal").classList.remove("active");
+      loadAnimalFeed();
+    } else {
+      alert("Failed to accept food.");
+    }
+  } catch (e) {
+    alert("Error accepting food.");
+  }
+}
+
+function updateCarouselUI() {
+  const track = document.getElementById("carouselTrack");
+  const dots = document.getElementById("carouselDots");
+  
+  track.innerHTML = modalPhotos.map(p => `
+    <div class="carousel-item">
+      <img src="${p}" onerror="this.src='/images/placeholder-food.jpg'">
+    </div>
+  `).join("");
+  
+  dots.innerHTML = modalPhotos.map((_, i) => `
+    <div class="dot ${i === 0 ? 'active' : ''}"></div>
+  `).join("");
+  
+  const prev = document.querySelector(".carousel-prev");
+  const next = document.querySelector(".carousel-next");
+  prev.style.display = modalPhotos.length > 1 ? "flex" : "none";
+  next.style.display = modalPhotos.length > 1 ? "flex" : "none";
+  
+  track.style.transform = `translateX(0%)`;
+}
+
+function moveCarousel(dir) {
+  currentCarouselIndex += dir;
+  if(currentCarouselIndex < 0) currentCarouselIndex = modalPhotos.length - 1;
+  if(currentCarouselIndex >= modalPhotos.length) currentCarouselIndex = 0;
+  
+  const track = document.getElementById("carouselTrack");
+  track.style.transform = `translateX(-${currentCarouselIndex * 100}%)`;
+  
+  const dots = document.querySelectorAll(".dot");
+  dots.forEach((dot, i) => {
+    dot.classList.toggle("active", i === currentCarouselIndex);
+  });
+}
+
+function formatTime(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleString('en-US', { 
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit', hour12: true 
+  });
+}
+
+function startCountdown(id, expiryStr) {
+  const el = document.getElementById(`countdown-${id}`);
+  if(!el) return;
+  function update() {
+    const diff = new Date(expiryStr).getTime() - new Date().getTime();
+    if(diff < 0) { 
+        el.style.display = 'block'; 
+        el.style.background = 'rgba(239, 68, 68, 0.8)';
+        el.innerText = `⌛ EXPIRED`;
+        return; 
+    }
+    const h = Math.floor(diff/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    el.innerText = `⌛ ${h}h ${m}m ${s}s`;
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+setInterval(loadAnimalFeed, 10000);
+loadAnimalFeed();
+</script>
+<script src="/js/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+body{
+min-height:100vh;
+display:flex;
+justify-content:flex-end;   /* keeps form on right side */
+align-items:center;         /* keeps it vertically centered */
+
+background:linear-gradient(135deg,#e9f1f1,#f6f6f6);
+background-image:url(/images/donormod.jpg);
+background-repeat:no-repeat;
+background-size:cover;
+
+padding-right:50px;
+
+overflow-y:auto;            /* allows scrolling */
+
+animation:fadeIn 1.5s ease;
+}
+
+
+/* Page fade animation */
+@keyframes fadeIn{
+from{
+opacity:0;
+}
+to{
+opacity:1;
+}
+}
+
+.title{
+margin-bottom:20px;
+color:#2c3e50;
+text-align:center;
+}
+
+/* Form container animation */
+.donor-container{
+max-width:500px;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,0.15);
+width:350px;
+
+animation:slideRight 1s ease;
+}
+
+/* Slide animation */
+@keyframes slideRight{
+from{
+transform:translateX(100px);
+opacity:0;
+}
+to{
+transform:translateX(0);
+opacity:1;
+}
+}
+
+form{
+display:flex;
+flex-direction:column;
+}
+
+label{
+margin-top:10px;
+font-weight:600;
+}
+
+input,select,textarea{
+padding:10px;
+margin-top:5px;
+border-radius:5px;
+border:1px solid #ccc;
+transition:0.3s;
+}
+
+/* Input focus animation */
+input:focus,select:focus,textarea:focus{
+border-color:#4CAF50;
+box-shadow:0 0 8px rgba(76,175,80,0.5);
+outline:none;
+}
+
+textarea{
+height:80px;
+resize:none;
+}
+
+button{
+margin-top:20px;
+padding:12px;
+border:none;
+background:#4CAF50;
+color:white;
+font-size:16px;
+border-radius:5px;
+cursor:pointer;
+transition:0.3s;
+}
+
+/* Button hover animation */
+button:hover{
+background:#2e7d32;
+transform:scale(1.05);
+}
+.back-btn{
+position:fixed;
+top:20px;
+left:20px;
+padding:10px 16px;
+border:none;
+border-radius:8px;
+background:#3498db;
+color:white;
+font-size:14px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+transition:0.3s;
+}
+
+.back-btn:hover{
+background:#2980b9;
+transform:scale(1.05);
+}
+/* Donation Animation Popup */
+
+#donationAnimation{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    visibility:hidden;
+    opacity:0;
+    transition:opacity 0.5s ease;
+    z-index:1000;
+}
+
+#donationAnimation.show{
+    visibility:visible;
+    opacity:1;
+}
+
+#donationImage{
+    width:500px;
+    max-width:90%;
+    border-radius:15px;
+    transform:scale(0.6);
+    transition:transform 0.6s ease;
+}
+
+#donationAnimation.show #donationImage{
+    transform:scale(1);
+}

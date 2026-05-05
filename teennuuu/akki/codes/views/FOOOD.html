@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feed Connect | Premium</title>
+<link rel="stylesheet" href="/css/style4.css">
+<!-- Modern Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="landing-page">
+
+<header class="navbar glass-nav">
+  <div class="nav-wrapper">
+    <div class="nav-left">
+      <div class="menu-icon" onclick="openMenu()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </div>
+      <div class="logo">Feed<span>Connect</span></div>
+    </div>
+    <div class="nav-btns" id="authSection">
+      <a href="login.html" class="login-link">Sign In</a>
+      <a href="register.html" class="btn btn-primary">Join the Movement</a>
+    </div>
+  </div>
+</header>
+
+<div id="sideMenu" class="side-menu">
+  <a href="javascript:void(0)" class="close-btn" onclick="closeMenu()">&times;</a>
+  <a href="FOOOD.html" onclick="closeMenu()">Home</a>
+  <a href="modules.html" onclick="closeMenu()">Dashboard</a>
+  <a href="profile1.html" onclick="closeMenu()">Profile</a>
+  <a href="notifications.html" onclick="closeMenu()">Notifications</a>
+  <a href="messages.html" onclick="closeMenu()">Inbox</a>
+</div>
+
+<section class="hero-premium">
+  <div class="hero-glow"></div>
+  <div class="container hero-wrapper">
+    <div class="hero-text">
+      <div class="badge">Eradicating Hunger</div>
+      <h1>Share Food.<br><span class="gradient-text">Change Lives.</span></h1>
+      <p>An intelligent platform bridging the gap between surplus food and verified communities in need. Fast, secure, and impactful.</p>
+      <div class="hero-actions">
+        <a href="register.html" class="btn btn-primary btn-large" id="heroActionBtn">Start Donating</a>
+        <a href="#about" class="btn btn-outline btn-large">Learn More</a>
+      </div>
+    </div>
+    <div class="hero-image-wrapper">
+      <div class="glass-card image-card">
+        <img src="/images/home1.jpg" alt="Donation" onerror="this.src='https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1000&auto=format&fit=crop'">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="features-section">
+  <div class="container">
+    <div class="section-heading text-center">
+      <h2>How FeedConnect Works</h2>
+      <p>A seamless process designed to eliminate food waste completely.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-box">
+        <div class="icon-box">🍱</div>
+        <h3>Post Surplus</h3>
+        <p>List extra food quickly with live location and details.</p>
+      </div>
+      <div class="feature-box">
+        <div class="icon-box">🤝</div>
+        <h3>Connect instantly</h3>
+        <p>Verified NGOs and animal feeders claim food in real-time.</p>
+      </div>
+      <div class="feature-box">
+        <div class="icon-box">📍</div>
+        <h3>Track & Deliver</h3>
+        <p>Navigate directly to the pickup point to secure the meal.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function openMenu(){ document.getElementById("sideMenu").style.width="300px"; }
+function closeMenu(){ document.getElementById("sideMenu").style.width="0"; }
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const currentUser = JSON.parse(sessionStorage.getItem("currentUser"));
+  if (currentUser) {
+    try {
+      const res = await fetch(`/api/profile/${currentUser.phone}`);
+      if (res.ok) {
+        const user = await res.json();
+        document.getElementById("authSection").innerHTML = `
+          <div class="user-info">
+            <span class="user-greeting">Welcome, ${user.name}</span>
+            <a href="modules.html" class="btn btn-primary">Dashboard</a>
+          </div>
+        `;
+        const heroBtn = document.getElementById("heroActionBtn");
+        if(heroBtn) {
+          heroBtn.href = "modules.html";
+          heroBtn.innerText = "Open Dashboard";
+        }
+      } else {
+        sessionStorage.removeItem("currentUser");
+      }
+    } catch (e) { }
+  }
+});
+</script>
+<script src="/js/theme.js"></script>
+</body>
+</html>

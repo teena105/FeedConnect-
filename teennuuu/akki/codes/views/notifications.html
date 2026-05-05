@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications - FeedConnect</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #f8fafc;
+    --text-primary: #1e293b;
+    --card-bg: #fff;
+    --border-color: #e2e8f0;
+    --primary: #10b981;
+  }
+  [data-theme="dark"] {
+    --bg-color: #0f172a;
+    --text-primary: #f8fafc;
+    --card-bg: #1e293b;
+    --border-color: #334155;
+  }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 20px;
+    transition: all 0.3s ease;
+  }
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+  .header h1 {
+    font-size: 28px;
+    margin: 0;
+  }
+  .back-link {
+    text-decoration: none;
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .notif-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    border-radius: 16px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .notif-card:hover {
+    transform: translateY(-2px);
+  }
+  .notif-card.unread {
+    border-left: 4px solid var(--primary);
+  }
+  .notif-icon {
+    font-size: 24px;
+    width: 50px;
+    height: 50px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .notif-body {
+    flex: 1;
+  }
+  .notif-text {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+  }
+  .notif-time {
+    font-size: 12px;
+    color: #64748b;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <a href="modules.html" class="back-link">← Dashboard</a>
+    <h1>Activity</h1>
+    <div style="width: 40px;"></div>
+  </div>
+
+  <div id="notifList" class="notification-list">
+    <div class="empty-state">Fetching latest activity...</div>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script>
+  const currentUser = JSON.parse(sessionStorage.getItem("currentUser"));
+  if (!currentUser) window.location.href = 'login.html';
+
+  async function loadNotifications() {
+    try {
+      const res = await fetch(`/api/notifications/${currentUser.phone}`);
+      const data = await res.json();
+      
+      const list = document.getElementById("notifList");
+      list.innerHTML = "";
+      
+      if (data.length === 0) {
+        list.innerHTML = '<div class="empty-state">No new activity to show yet.</div>';
+        return;
+      }
+
+      data.forEach(n => {
+        const card = document.createElement("div");
+        card.className = `notif-card ${n.isRead ? '' : 'unread'}`;
+        
+        let icon = '🔔';
+        if (n.type === 'follow') icon = '👤';
+        if (n.type === 'like') icon = '❤️';
+        if (n.type === 'comment') icon = '💬';
+        if (n.type === 'donation_accepted') icon = '🎉';
+        if (n.type === 'rating') icon = '⭐';
+
+        card.innerHTML = `
+          <div class="notif-icon">${icon}</div>
+          <div class="notif-body">
+            <div class="notif-text">${n.text}</div>
+            <div class="notif-time">${new Date(n.timestamp).toLocaleString()}</div>
+          </div>
+        `;
+
+        card.onclick = () => markAsRead(n._id, n.data);
+        list.appendChild(card);
+      });
+    } catch (e) {
+      console.error(e);
+      document.getElementById("notifList").innerHTML = '<div class="empty-state">Error loading activity.</div>';
+    }
+  }
+
+  async function markAsRead(id, data) {
+    await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+    // Navigate based on type if needed
+    location.reload(); 
+  }
+
+  loadNotifications();
+</script>
+</body>
+</html>

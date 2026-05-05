@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Feed Connect</title>
+<link rel="stylesheet" href="/css/login.css">
+</head>
+
+<body>
+
+<div class="login-container">
+<h2>Feed Connect Login</h2>
+<form id="loginForm">
+
+<div class="form-group">
+<label>Email or Mobile</label>
+<input type="text" id="identifier" placeholder="Enter email or 10-digit mobile number" required>
+</div>
+
+<div class="form-group">
+<label>Password</label>
+<input type="password" id="password" placeholder="Enter your password" required>
+<a href="forgot.html" style="font-size: 13px; color: #10b981; text-decoration: none; display: block; text-align: right; margin-top: 8px;">Forgot Password?</a>
+</div>
+
+<button type="submit">Login</button><br><br>
+
+<button type="button" onclick="window.location.href='FOOOD.html'">⬅ Back</button>
+
+</form>
+
+</div>
+
+<script>
+
+// REDIRECT IF ALREADY LOGGED IN
+if(sessionStorage.getItem("currentUser")){
+  window.location.href = "modules.html";
+}
+
+document.getElementById("loginForm").addEventListener("submit", function(e){
+
+e.preventDefault();
+
+/* GET INPUT VALUES */
+let identifier = document.getElementById("identifier").value.trim();
+let password = document.getElementById("password").value.trim();
+
+fetch('/api/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ identifier, password })
+})
+.then(response => response.json().then(data => ({ status: response.status, body: data })))
+.then(result => {
+  if (result.status === 200) {
+    sessionStorage.setItem("currentUser", JSON.stringify({ phone: result.body.user.phone }));
+    alert("Login Successful");
+    window.location.href = "modules.html";
+  } else {
+    alert(result.body.message || "Login failed");
+  }
+})
+.catch(err => {
+  console.error("Error:", err);
+  alert("An error occurred during login");
+});
+
+});
+
+</script>
+
+<script src="/js/theme.js"></script>
+</body>
+</html>
